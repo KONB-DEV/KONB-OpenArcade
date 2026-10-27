@@ -1,0 +1,120 @@
+package off.kys.openarcade.features.analytics.ui.components
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import off.kys.openarcade.core.domain.model.TopGame
+import off.kys.openarcade.core.ui.components.ArcadeCard
+
+@Composable
+fun TopGameItem(
+    game: TopGame,
+    maxPlayTime: Long,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+
+    val progressTarget = remember(game.playTimeMs, maxPlayTime) {
+        if (maxPlayTime > 0) game.playTimeMs.toFloat() / maxPlayTime else 0f
+    }
+    val progressAnim by animateFloatAsState(
+        targetValue = progressTarget,
+        animationSpec = tween(durationMillis = 900),
+        label = "topGameProgress"
+    )
+    val formattedTime = remember(game.playTimeMs) { formatPlayTime(game.playTimeMs) }
+
+    ArcadeCard(
+        modifier = modifier.fillMaxWidth(),
+        accentColor = accentColor
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = game.title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = formattedTime,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = accentColor
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(72.dp)
+                    .height(6.dp)
+                    .clip(CircleShape)
+                    .background(accentColor.copy(alpha = 0.15f))
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                accentColor.copy(alpha = 0.30f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progressAnim)
+                        .fillMaxHeight()
+                        .clip(CircleShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    accentColor.copy(alpha = 0.95f),
+                                    tertiaryColor.copy(alpha = 0.55f)
+                                )
+                            )
+                        )
+                )
+            }
+        }
+    }
+}
+
+private fun formatPlayTime(ms: Long): String {
+    val hours = ms / (1000 * 60 * 60)
+    val minutes = (ms / (1000 * 60)) % 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+}

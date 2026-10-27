@@ -1,0 +1,4 @@
+- Added "Skip Game Details" fast-launch toggle in settings.
+- Manage game tags directly from the library context menu.
+- Added a dynamic Open-Source Licenses screen.
+- Significant architecture improvements for better performance and stability.

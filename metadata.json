@@ -1,0 +1,6 @@
+{
+  "name": "OpenArcade",
+  "description": "An open-source game launcher and arcade dashboard for Android.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
