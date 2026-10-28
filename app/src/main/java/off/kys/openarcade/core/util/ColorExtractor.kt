@@ -9,8 +9,13 @@ import androidx.core.graphics.createBitmap
 import androidx.palette.graphics.Palette
 
 class ColorExtractor {
+    private val primaryColorCache = android.util.LruCache<Int, Color>(64)
+    private val top5Cache = android.util.LruCache<Int, List<Color>>(64)
+
     fun extractPrimaryColor(drawable: Drawable?): Color {
         if (drawable == null) return Color(0xFF2A2A2A)
+        val key = drawable.constantState?.hashCode() ?: drawable.hashCode()
+        primaryColorCache.get(key)?.let { return it }
         
         val bitmap = try {
             val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 100
@@ -31,8 +36,9 @@ class ColorExtractor {
                 palette.getMutedColor(Color(0xFF2A2A2A).toArgb())
             )
         )
-        
-        return Color(colorInt)
+        val result = Color(colorInt)
+        primaryColorCache.put(key, result)
+        return result
     }
 
     fun getAdaptiveColor(color: Color, isDark: Boolean): Color {
@@ -62,6 +68,8 @@ class ColorExtractor {
         fallbackPrimary: Color? = null,
         isDark: Boolean = true
     ): List<Color> {
+        val key = (drawable?.constantState?.hashCode() ?: drawable?.hashCode() ?: fallbackPrimary?.hashCode() ?: 0) * 31 + (if (isDark) 1 else 0)
+        top5Cache.get(key)?.let { return it }
         val baseSeed = fallbackPrimary ?: Color(0xFF00E5FF)
         val defaultColors = listOf(
             baseSeed,
@@ -136,8 +144,7 @@ class ColorExtractor {
             angleOffset += 42f
         }
 
-        // Tune all 5 stops for balanced perceptual luminescence and +15% chroma boost
-        return rawColors.take(5).map { color ->
+        val result = rawColors.take(5).map { color ->
             val hsl = FloatArray(3)
             ColorUtils.colorToHSL(color.toArgb(), hsl)
             // One UI 9 saturation control matrix: boost underlying chroma by 15%
@@ -149,5 +156,7 @@ class ColorExtractor {
             }
             Color(ColorUtils.HSLToColor(hsl))
         }
+        top5Cache.put(key, result)
+        return result
     }
 }

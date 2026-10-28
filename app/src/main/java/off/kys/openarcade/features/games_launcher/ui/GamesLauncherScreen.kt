@@ -311,14 +311,7 @@ class GamesLauncherScreen : Screen {
                                 }
                             },
                             onEvent = { viewModel.onEvent(it) },
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = if (state.reduceAnimations) snap() else tween(300),
-                                fadeOutSpec = if (state.reduceAnimations) snap() else tween(300),
-                                placementSpec = if (state.reduceAnimations) snap() else spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            ),
+                            modifier = Modifier,
                             hapticFeedbackEnabled = state.hapticFeedback,
                             reduceAnimations = state.reduceAnimations
                         )

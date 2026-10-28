@@ -2,9 +2,8 @@ package off.kys.openarcade.core.ui.components
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -12,11 +11,11 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import cafe.adriel.voyager.core.screen.Screen
@@ -27,9 +26,11 @@ import off.kys.openarcade.core.util.HapticFeedbackService
 import off.kys.openarcade.core.util.LocalHapticFeedbackService
 
 /**
- * Samsung One UI 9 Fluid Kinetic Motion Navigation Transition.
- * Uses the signature non-linear organic deceleration curve Cubic-Bezier(0.19, 1.0, 0.22, 1.0)
- * over 360ms with subtle scale and proportional parallax offset for silky-smooth 60/120fps transitions.
+ * Samsung One UI 9 Global Fluid Kinetic Motion Navigation Transition.
+ * Employs custom physics-based spring dynamics (F = -kx - cv) tuned with
+ * an organic deceleration curve (stiffness = 320f, dampingRatio = 0.88f).
+ * Eliminates mechanical lag and rigid linear easing through parallel layer
+ * scaling (0.975f -> 1.0f) and natural 28% proportional parallax displacement.
  */
 @Composable
 fun SpringScreenTransition(
@@ -39,7 +40,19 @@ fun SpringScreenTransition(
     hapticService: HapticFeedbackService = LocalHapticFeedbackService.current
 ) {
     LaunchedEffect(navigator.lastItem) {
-        hapticService.navigationTransition()
+        try {
+            hapticService.navigationTransition()
+        } catch (_: Throwable) {}
+    }
+
+    val kineticOffsetSpring = androidx.compose.runtime.remember {
+        spring<IntOffset>(dampingRatio = 0.88f, stiffness = 320f)
+    }
+    val kineticScaleSpring = androidx.compose.runtime.remember {
+        spring<Float>(dampingRatio = 0.88f, stiffness = 340f)
+    }
+    val kineticAlphaSpring = androidx.compose.runtime.remember {
+        spring<Float>(dampingRatio = 1.0f, stiffness = 400f)
     }
 
     ScreenTransition(
@@ -49,59 +62,52 @@ fun SpringScreenTransition(
             .background(Color(0xFF0A0E1A)),
         transition = {
             if (reduceAnimations) {
-                fadeIn(tween(200, easing = LinearOutSlowInEasing)) togetherWith
-                        fadeOut(tween(180, easing = LinearOutSlowInEasing))
+                (fadeIn(spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)) togetherWith
+                        fadeOut(spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)))
             } else {
                 val isPush = navigator.lastEvent != StackEvent.Pop
 
-                // Samsung One UI 9 Primary Interface Deceleration Curve
-                val oneUi9Decel = CubicBezierEasing(0.19f, 1.0f, 0.22f, 1.0f)
-                val duration = 360
-                val offsetSpec = tween<IntOffset>(duration, easing = oneUi9Decel)
-                val scaleSpec = tween<Float>(duration, easing = oneUi9Decel)
-                val fadeSpec = tween<Float>((duration * 0.75f).toInt(), easing = LinearOutSlowInEasing)
-
                 val enterTransition = if (isPush) {
                     slideInHorizontally(
-                        animationSpec = offsetSpec,
-                        initialOffsetX = { fullWidth -> (fullWidth * 0.22f).toInt() }
+                        animationSpec = kineticOffsetSpring,
+                        initialOffsetX = { fullWidth -> (fullWidth * 0.28f).toInt() }
                     ) + fadeIn(
-                        animationSpec = fadeSpec
+                        animationSpec = kineticAlphaSpring
                     ) + scaleIn(
-                        initialScale = 0.98f,
-                        animationSpec = scaleSpec
+                        initialScale = 0.975f,
+                        animationSpec = kineticScaleSpring
                     )
                 } else {
                     slideInHorizontally(
-                        animationSpec = offsetSpec,
-                        initialOffsetX = { fullWidth -> (-fullWidth * 0.12f).toInt() }
+                        animationSpec = kineticOffsetSpring,
+                        initialOffsetX = { fullWidth -> (-fullWidth * 0.10f).toInt() }
                     ) + fadeIn(
-                        animationSpec = fadeSpec
+                        animationSpec = kineticAlphaSpring
                     ) + scaleIn(
                         initialScale = 0.985f,
-                        animationSpec = scaleSpec
+                        animationSpec = kineticScaleSpring
                     )
                 }
 
                 val exitTransition = if (isPush) {
                     slideOutHorizontally(
-                        animationSpec = offsetSpec,
-                        targetOffsetX = { fullWidth -> (-fullWidth * 0.12f).toInt() }
+                        animationSpec = kineticOffsetSpring,
+                        targetOffsetX = { fullWidth -> (-fullWidth * 0.10f).toInt() }
                     ) + fadeOut(
-                        animationSpec = fadeSpec
+                        animationSpec = kineticAlphaSpring
                     ) + scaleOut(
                         targetScale = 0.985f,
-                        animationSpec = scaleSpec
+                        animationSpec = kineticScaleSpring
                     )
                 } else {
                     slideOutHorizontally(
-                        animationSpec = offsetSpec,
-                        targetOffsetX = { fullWidth -> (fullWidth * 0.22f).toInt() }
+                        animationSpec = kineticOffsetSpring,
+                        targetOffsetX = { fullWidth -> (fullWidth * 0.28f).toInt() }
                     ) + fadeOut(
-                        animationSpec = fadeSpec
+                        animationSpec = kineticAlphaSpring
                     ) + scaleOut(
-                        targetScale = 0.98f,
-                        animationSpec = scaleSpec
+                        targetScale = 0.975f,
+                        animationSpec = kineticScaleSpring
                     )
                 }
 
@@ -110,4 +116,5 @@ fun SpringScreenTransition(
         }
     )
 }
+
 

@@ -12,6 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * ColorOS 17 & One UI 9 Tactile Squish-and-Stretch Modifier.
@@ -38,39 +40,34 @@ fun Modifier.squishElasticPress(
     val scaleXAnim = remember { Animatable(1f) }
     val scaleYAnim = remember { Animatable(1f) }
 
+    val pressSpring = remember {
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        )
+    }
+    val releaseSpring = remember {
+        spring<Float>(
+            dampingRatio = 0.62f,
+            stiffness = 240f
+        )
+    }
+
     LaunchedEffect(isPressed) {
         if (isPressed) {
-            // Snappy displacement press
-            scaleXAnim.animateTo(
-                targetValue = squishX,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
-            scaleYAnim.animateTo(
-                targetValue = squishY,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
+            launch {
+                scaleXAnim.animateTo(targetValue = squishX, animationSpec = pressSpring)
+            }
+            launch {
+                scaleYAnim.animateTo(targetValue = squishY, animationSpec = pressSpring)
+            }
         } else {
-            // Elastic rubbery rebound with ColorOS 17 overshoot
-            scaleXAnim.animateTo(
-                targetValue = 1f,
-                animationSpec = spring(
-                    dampingRatio = 0.62f,
-                    stiffness = 240f
-                )
-            )
-            scaleYAnim.animateTo(
-                targetValue = 1f,
-                animationSpec = spring(
-                    dampingRatio = 0.62f,
-                    stiffness = 240f
-                )
-            )
+            launch {
+                scaleXAnim.animateTo(targetValue = 1f, animationSpec = releaseSpring)
+            }
+            launch {
+                scaleYAnim.animateTo(targetValue = 1f, animationSpec = releaseSpring)
+            }
         }
     }
 

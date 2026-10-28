@@ -114,6 +114,15 @@ fun ArcadeCard(
         )
     }
 
+    val backgroundGradient = remember(animatedTint) {
+        Brush.verticalGradient(
+            listOf(
+                animatedTint,
+                animatedTint.copy(alpha = (animatedTint.alpha * 0.88f).coerceAtLeast(0.40f))
+            )
+        )
+    }
+
     Box(
         modifier = modifier
             .graphicsLayer {
@@ -121,14 +130,7 @@ fun ArcadeCard(
                 scaleY = scale
             }
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        animatedTint,
-                        animatedTint.copy(alpha = (animatedTint.alpha * 0.88f).coerceAtLeast(0.40f))
-                    )
-                )
-            )
+            .background(backgroundGradient)
             // Layer 3: Samsung One UI 9 Milky Substrate
             .background(
                 if (isDark) Color(0xFF121212).copy(alpha = 0.18f)

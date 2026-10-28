@@ -75,8 +75,8 @@ fun HeroBannerPager(
 
     LaunchedEffect(pagerState.currentPage, installedGames, isDark) {
         hapticService.tabSelect()
-        val currentGame = installedGames.getOrNull(pagerState.currentPage)
-        if (currentGame != null) {
+        val currentGame = installedGames.getOrNull(pagerState.currentPage) ?: return@LaunchedEffect
+        val dominantAdaptive = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val drawable: android.graphics.drawable.Drawable? = try {
                 if (currentGame.customIconPath != null) {
                     android.graphics.BitmapFactory.decodeFile(currentGame.customIconPath)?.let {
@@ -89,9 +89,9 @@ fun HeroBannerPager(
                 null
             }
             val top5 = mediaRepository.extractTop5ProminentColors(drawable, isDark = isDark)
-            val dominantAdaptive = top5.firstOrNull() ?: mediaRepository.getAdaptiveColor(currentGame.getPrimaryColor(), isDark)
-            onFeaturedColorChanged?.invoke(dominantAdaptive)
+            top5.firstOrNull() ?: mediaRepository.getAdaptiveColor(currentGame.getPrimaryColor(), isDark)
         }
+        onFeaturedColorChanged?.invoke(dominantAdaptive)
     }
 
     val primaryAdaptive = remember(pagerState.currentPage, isDark) {

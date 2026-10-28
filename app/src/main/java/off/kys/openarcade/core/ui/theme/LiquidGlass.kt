@@ -21,7 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -36,8 +36,9 @@ import androidx.compose.ui.unit.dp
 /**
  * CompositionLocal carrying the primary color extracted from the currently featured game artwork.
  * Allows all glassmorphic cards across the dashboard to slightly adjust their frosted glass tint.
+ * Uses compositionLocalOf so only consumers recompose when color changes, preventing tree invalidations.
  */
-val LocalFeaturedGameTint = staticCompositionLocalOf { Color.Unspecified }
+val LocalFeaturedGameTint = compositionLocalOf { Color.Unspecified }
 
 /**
  * Generates an animated 45-degree, 5-stop linear gradient matching the requested OKLCH specification:
@@ -76,23 +77,7 @@ fun rememberDynamicLogo5StopGradient(
         label = "c4"
     )
 
-    val transition = rememberInfiniteTransition(label = "bannerGradientAnim")
-    val drift = if (reduceAnimations) {
-        0f
-    } else {
-        val animDrift by transition.animateFloat(
-            initialValue = -40f,
-            targetValue = 40f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(4000, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "drift"
-        )
-        animDrift
-    }
-
-    return remember(c0, c1, c2, c3, c4, drift, alpha) {
+    return remember(c0, c1, c2, c3, c4, alpha) {
         Brush.linearGradient(
             colorStops = arrayOf(
                 0.0f to c0.copy(alpha = alpha),
@@ -101,9 +86,9 @@ fun rememberDynamicLogo5StopGradient(
                 0.75f to c3.copy(alpha = alpha),
                 1.00f to c4.copy(alpha = alpha)
             ),
-            // 45-degree angle vector (x and y proportional) with soft breathing displacement
-            start = Offset(0f + drift, 0f - drift),
-            end = Offset(900f + drift, 900f - drift)
+            // 45-degree angle vector (x and y proportional)
+            start = Offset(0f, 0f),
+            end = Offset(900f, 900f)
         )
     }
 }
