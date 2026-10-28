@@ -14,7 +14,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import off.kys.openarcade.core.ui.theme.LuminousMotionTokens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -98,7 +101,7 @@ fun LaunchOverlay(
 
     val iconScale by animateFloatAsState(
         targetValue = if (phase >= 1) 1f else 0.55f,
-        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        animationSpec = if (reduceAnimations) tween(300) else LuminousMotionTokens.OneTakeLaunchSpring,
         label = "iconScale"
     )
     val iconAlpha by animateFloatAsState(
@@ -199,8 +202,14 @@ fun LaunchOverlay(
 
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn(tween(350)),
-        exit = fadeOut(tween(500)),
+        enter = scaleIn(
+            initialScale = 0.88f,
+            animationSpec = if (reduceAnimations) tween(200) else LuminousMotionTokens.OneTakeLaunchSpring
+        ) + fadeIn(tween(250)),
+        exit = scaleOut(
+            targetScale = 1.06f,
+            animationSpec = if (reduceAnimations) tween(200) else LuminousMotionTokens.OneTakeLaunchSpring
+        ) + fadeOut(tween(350)),
         modifier = modifier
     ) {
         Box(

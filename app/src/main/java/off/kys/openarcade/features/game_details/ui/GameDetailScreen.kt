@@ -1,5 +1,6 @@
 package off.kys.openarcade.features.game_details.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +25,10 @@ class GameDetailScreen(val packageName: String) : Screen {
         val uiState by viewModel.uiState.collectAsState()
 
         val currentGame = uiState.game
+
+        BackHandler {
+            navigator.pop()
+        }
 
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             viewModel.onEvent(GameDetailUiEvent.RefreshStats)

@@ -1,5 +1,6 @@
 package off.kys.openarcade.features.settings.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -19,15 +20,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -70,6 +75,7 @@ import off.kys.openarcade.core.ui.components.ScrollbarWidth
 import off.kys.openarcade.core.ui.components.SectionHeader
 import off.kys.openarcade.features.licenses.ui.LicensesScreen
 import off.kys.openarcade.core.ui.theme.OpenArcadeTheme
+import off.kys.openarcade.core.ui.util.squishElasticPress
 import org.koin.androidx.compose.koinViewModel
 
 private val SettingItemHeight = 64.dp
@@ -92,41 +98,92 @@ class SettingsScreen : Screen {
         val primary = MaterialTheme.colorScheme.primary
         val tertiary = MaterialTheme.colorScheme.tertiary
 
+        BackHandler {
+            navigator.pop()
+        }
+
         Scaffold(
             topBar = {
-                Column {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = "Settings",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Black
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Frosted Glass Circular Back Button
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
+                                .border(
+                                    1.dp,
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = 0.45f),
+                                            primary.copy(alpha = 0.25f),
+                                            Color.White.copy(alpha = 0.10f)
+                                        )
+                                    ),
+                                    CircleShape
                                 )
+                                .clickable { navigator.pop() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.round_arrow_back_24),
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
                             )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { navigator.pop() }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.round_arrow_back_24),
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                        }
+
+                        // Top bar Title
+                        Text(
+                            text = "Settings",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    )
-                    // 2dp accent bar — mirrors AppPickerScreen / GameGridCard
+
+                        // Symmetrical settings indicator badge
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(primary.copy(alpha = 0.12f))
+                                .border(1.dp, primary.copy(alpha = 0.30f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.round_settings_24),
+                                contentDescription = null,
+                                tint = primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Delicate hairline separator
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(2.dp)
+                            .padding(top = 4.dp)
+                            .height(1.dp)
                             .background(
                                 Brush.horizontalGradient(
                                     listOf(
-                                        primary.copy(alpha = 0.65f),
-                                        tertiary.copy(alpha = 0.30f),
+                                        Color.Transparent,
+                                        primary.copy(alpha = 0.40f),
+                                        tertiary.copy(alpha = 0.20f),
                                         Color.Transparent
                                     )
                                 )
@@ -155,25 +212,47 @@ class SettingsScreen : Screen {
                 ) {
 
                     item {
-                        SectionHeader(title = "Display")
+                        // Samsung One UI 9 Expansive Reachability Viewing Area
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 6.dp, end = 6.dp, top = 8.dp, bottom = 14.dp)
+                        ) {
+                            Text(
+                                text = "Settings",
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = (-0.6).sp
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Preferences · Customization · Arcade Engine",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
+                            )
+                        }
+                    }
+
+                    // ── Display ───────────────────────────────────────────────
+                    item {
+                        SettingsSectionHeader(title = "Display", accentColor = Color(0xFF38BDF8))
                         Spacer(Modifier.height(8.dp))
                     }
 
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFF38BDF8)) {
                             ToggleSettingItem(
                                 icon = painterResource(R.drawable.round_bolt_24),
                                 title = "Immersive Mode",
                                 subtitle = "Hide status & navigation bars while in launcher",
                                 checked = state.immersiveMode,
+                                accentColor = Color(0xFF38BDF8),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleImmersiveMode(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleImmersiveMode(it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -182,51 +261,46 @@ class SettingsScreen : Screen {
                                 title = "Keep Screen On",
                                 subtitle = "Prevent screen from sleeping in launcher",
                                 checked = state.keepScreenOn,
+                                accentColor = Color(0xFFFBBF24),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
-                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleKeepScreenOn(
-                                            it
-                                        )
-                                    )
+                                onCheckedChange = {
+                                    viewModel.onEvent(SettingsUiEvent.ToggleKeepScreenOn(it))
                                 }
                             )
                         }
                     }
 
                     // ── Screen Orientation ────────────────────────────────────
-                    item { Spacer(Modifier.height(20.dp)) }
+                    item { Spacer(Modifier.height(18.dp)) }
                     item {
-                        SectionHeader(title = "Screen Orientation")
+                        SettingsSectionHeader(title = "Screen Orientation", accentColor = Color(0xFF34D399))
                         Spacer(Modifier.height(8.dp))
                     }
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFF34D399)) {
                             OrientationSettingItem(
                                 selected = state.screenOrientation,
+                                accentColor = Color(0xFF34D399),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 onSelect = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.SetScreenOrientation(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.SetScreenOrientation(it))
                                 }
                             )
                         }
                     }
 
                     // ── Grid Layout ───────────────────────────────────────────
-                    item { Spacer(Modifier.height(20.dp)) }
+                    item { Spacer(Modifier.height(18.dp)) }
                     item {
-                        SectionHeader(title = "Grid Layout")
+                        SettingsSectionHeader(title = "Grid Layout", accentColor = Color(0xFFA78BFA))
                         Spacer(Modifier.height(8.dp))
                     }
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFFA78BFA)) {
                             GridColumnsSettingItem(
                                 selected = state.gridColumns,
+                                accentColor = Color(0xFFA78BFA),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 onSelect = { viewModel.onEvent(SettingsUiEvent.SetGridColumns(it)) }
                             )
@@ -234,27 +308,23 @@ class SettingsScreen : Screen {
                     }
 
                     // ── Launcher Sections ─────────────────────────────────────
-                    item { Spacer(Modifier.height(20.dp)) }
+                    item { Spacer(Modifier.height(18.dp)) }
                     item {
-                        SectionHeader(title = "Launcher Sections")
+                        SettingsSectionHeader(title = "Launcher Sections", accentColor = Color(0xFFF472B6))
                         Spacer(Modifier.height(8.dp))
                     }
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFFF472B6)) {
                             ToggleSettingItem(
                                 icon = painterResource(R.drawable.round_favorite_24),
                                 title = "Favorites",
                                 subtitle = "Show pinned games at the top",
                                 checked = state.showFavoritesSection,
+                                accentColor = Color(0xFFF472B6),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleSection(
-                                            LauncherSection.FAVORITES,
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleSection(LauncherSection.FAVORITES, it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -263,15 +333,11 @@ class SettingsScreen : Screen {
                                 title = "Analytics",
                                 subtitle = "Show play-time charts and stats",
                                 checked = state.showAnalyticsSection,
+                                accentColor = Color(0xFF2DD4BF),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleSection(
-                                            LauncherSection.ANALYTICS,
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleSection(LauncherSection.ANALYTICS, it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -280,15 +346,11 @@ class SettingsScreen : Screen {
                                 title = "Recent Activity",
                                 subtitle = "Show recently played games",
                                 checked = state.showRecentSection,
+                                accentColor = Color(0xFF60A5FA),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleSection(
-                                            LauncherSection.RECENT_ACTIVITY,
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleSection(LauncherSection.RECENT_ACTIVITY, it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -297,41 +359,34 @@ class SettingsScreen : Screen {
                                 title = "System Status",
                                 subtitle = "Show battery, storage and RAM usage",
                                 checked = state.showSystemStatus,
+                                accentColor = Color(0xFF818CF8),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleSection(
-                                            LauncherSection.SYSTEM_STATUS,
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleSection(LauncherSection.SYSTEM_STATUS, it))
                                 }
                             )
                         }
                     }
 
-                    // ── Feel ──────────────────────────────────────────────────
-                    item { Spacer(Modifier.height(20.dp)) }
+                    // ── Feel & Transitions ────────────────────────────────────
+                    item { Spacer(Modifier.height(18.dp)) }
                     item {
-                        SectionHeader(title = "Feel")
+                        SettingsSectionHeader(title = "Feel & Transitions", accentColor = Color(0xFFFB923C))
                         Spacer(Modifier.height(8.dp))
                     }
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFFFB923C)) {
                             ToggleSettingItem(
                                 icon = painterResource(R.drawable.round_sports_esports_24),
                                 title = "Haptic Feedback",
-                                subtitle = "Vibrate on button presses and game launch",
+                                subtitle = "Tactile response on taps and card selection",
                                 checked = state.hapticFeedback,
+                                accentColor = Color(0xFFFB7185),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleHapticFeedback(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleHapticFeedback(it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -340,14 +395,11 @@ class SettingsScreen : Screen {
                                 title = "Launch Animation",
                                 subtitle = "Animate app icon when launching a game",
                                 checked = state.launchAnimation,
+                                accentColor = Color(0xFF34D399),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleLaunchAnimation(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleLaunchAnimation(it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -356,14 +408,11 @@ class SettingsScreen : Screen {
                                 title = "Skip Game Details",
                                 subtitle = "Launch games directly on click",
                                 checked = state.skipGameDetails,
+                                accentColor = Color(0xFFC084FC),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleSkipGameDetails(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleSkipGameDetails(it))
                                 }
                             )
                             SettingsGroupDivider()
@@ -372,30 +421,29 @@ class SettingsScreen : Screen {
                                 title = "Reduce Animations",
                                 subtitle = "Simplify UI transitions for performance",
                                 checked = state.reduceAnimations,
+                                accentColor = Color(0xFF94A3B8),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 reduceAnimations = state.reduceAnimations,
                                 onCheckedChange = {
-                                    viewModel.onEvent(
-                                        SettingsUiEvent.ToggleReduceAnimations(
-                                            it
-                                        )
-                                    )
+                                    viewModel.onEvent(SettingsUiEvent.ToggleReduceAnimations(it))
                                 }
                             )
                         }
                     }
 
-                    item { Spacer(Modifier.height(20.dp)) }
+                    // ── About ─────────────────────────────────────────────────
+                    item { Spacer(Modifier.height(18.dp)) }
                     item {
-                        SectionHeader(title = "About")
+                        SettingsSectionHeader(title = "About", accentColor = Color(0xFF818CF8))
                         Spacer(Modifier.height(8.dp))
                     }
                     item {
-                        SettingsGroup {
+                        SettingsGroup(accentColor = Color(0xFF818CF8)) {
                             NavigationSettingItem(
                                 icon = painterResource(R.drawable.round_sports_esports_24),
                                 title = "OpenArcade",
                                 subtitle = "Version ${BuildConfig.VERSION_NAME} · Built with ♥",
+                                accentColor = Color(0xFF38BDF8),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 onClick = { uriHandler.openUri("https://github.com/kys0ff/OpenArcade") }
                             )
@@ -404,6 +452,7 @@ class SettingsScreen : Screen {
                                 icon = painterResource(R.drawable.round_explore_24),
                                 title = "Licenses",
                                 subtitle = "Open source libraries used in this app",
+                                accentColor = Color(0xFFA78BFA),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 onClick = { navigator += LicensesScreen() }
                             )
@@ -411,8 +460,9 @@ class SettingsScreen : Screen {
                             NavigationSettingItem(
                                 icon = painterResource(R.drawable.round_close_24),
                                 title = "Reset All Settings",
-                                subtitle = "Restore defaults",
+                                subtitle = "Restore default settings and view states",
                                 isDestructive = true,
+                                accentColor = Color(0xFFF43F5E),
                                 hapticFeedbackEnabled = state.hapticFeedback,
                                 onClick = { viewModel.onEvent(SettingsUiEvent.ResetAll) }
                             )
@@ -439,13 +489,41 @@ class SettingsScreen : Screen {
 }
 
 @Composable
+private fun SettingsSectionHeader(
+    title: String,
+    accentColor: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(start = 6.dp, top = 8.dp, bottom = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 14.dp)
+                .clip(CircleShape)
+                .background(accentColor)
+        )
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp
+            ),
+            color = accentColor
+        )
+    }
+}
+
+@Composable
 private fun SettingsGroup(
     modifier: Modifier = Modifier,
+    accentColor: Color? = null,
     content: @Composable () -> Unit
 ) {
-    val primary = MaterialTheme.colorScheme.primary
+    val primary = accentColor ?: MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
-    val bentoShape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp)
+    val bentoShape = RoundedCornerShape(24.dp)
 
     Column(
         modifier = modifier
@@ -454,20 +532,18 @@ private fun SettingsGroup(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.48f),
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.52f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f)
                     )
                 )
             )
             .border(
-                1.2.dp,
-                Brush.linearGradient(
+                1.dp,
+                Brush.verticalGradient(
                     listOf(
-                        Color.White.copy(alpha = 0.65f),
-                        primary.copy(alpha = 0.45f),
-                        tertiary.copy(alpha = 0.20f),
-                        Color.White.copy(alpha = 0.05f),
-                        Color.Transparent
+                        Color.White.copy(alpha = 0.38f),
+                        primary.copy(alpha = 0.28f),
+                        Color.White.copy(alpha = 0.08f)
                     )
                 ),
                 bentoShape
@@ -477,14 +553,14 @@ private fun SettingsGroup(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(1.5.dp)
+                .height(1.dp)
                 .background(
                     Brush.horizontalGradient(
                         listOf(
                             Color.Transparent,
-                            Color.White.copy(alpha = 0.60f),
-                            primary.copy(alpha = 0.70f),
-                            tertiary.copy(alpha = 0.35f),
+                            Color.White.copy(alpha = 0.50f),
+                            primary.copy(alpha = 0.45f),
+                            tertiary.copy(alpha = 0.25f),
                             Color.Transparent
                         )
                     )
@@ -521,39 +597,40 @@ private fun ToggleSettingItem(
     subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    accentColor: Color? = null,
     hapticFeedbackEnabled: Boolean = true,
     reduceAnimations: Boolean = false
 ) {
     val haptic = LocalHapticFeedback.current
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val hapticService = off.kys.openarcade.core.util.LocalHapticFeedbackService.current
+    val primary = accentColor ?: MaterialTheme.colorScheme.primary
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val rowBackground by animateColorAsState(
         targetValue = if (isPressed)
-            primary.copy(alpha = if (checked) 0.12f else 0.06f)
+            primary.copy(alpha = if (checked) 0.14f else 0.07f)
         else Color.Transparent,
         animationSpec = tween(if (reduceAnimations) 0 else AnimDuration),
         label = "toggleRowBg_$title"
     )
 
     val iconBadgeBg by animateColorAsState(
-        targetValue = if (checked) primary.copy(alpha = 0.18f)
-        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+        targetValue = if (checked) primary.copy(alpha = 0.22f)
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
         animationSpec = tween(if (reduceAnimations) 0 else AnimDuration),
         label = "iconBadgeBg_$title"
     )
     val iconTint by animateColorAsState(
         targetValue = if (checked) primary
-        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.50f),
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
         animationSpec = tween(if (reduceAnimations) 0 else AnimDuration),
         label = "iconTint_$title"
     )
     val titleColor by animateColorAsState(
         targetValue = if (checked) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
         animationSpec = tween(if (reduceAnimations) 0 else AnimDuration),
         label = "titleColor_$title"
     )
@@ -562,13 +639,16 @@ private fun ToggleSettingItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(SettingItemHeight)
+            .squishElasticPress(interactionSource = interactionSource, reduceAnimations = reduceAnimations)
             .background(rowBackground)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = {
                     if (hapticFeedbackEnabled) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        try {
+                            hapticService.toggleSwitch(!checked)
+                        } catch (_: Throwable) {}
                     }
                     onCheckedChange(!checked)
                 }
@@ -584,7 +664,7 @@ private fun ToggleSettingItem(
             background = Brush.radialGradient(
                 listOf(
                     iconBadgeBg,
-                    if (checked) tertiary.copy(alpha = 0.04f) else iconBadgeBg.copy(alpha = 0.3f)
+                    if (checked) primary.copy(alpha = 0.08f) else iconBadgeBg.copy(alpha = 0.4f)
                 )
             ),
             borderColor = iconTint.copy(alpha = 0.40f)
@@ -595,7 +675,7 @@ private fun ToggleSettingItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Normal
+                    fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Medium
                 ),
                 color = titleColor,
                 maxLines = 1,
@@ -604,9 +684,8 @@ private fun ToggleSettingItem(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                // primary for meta text — same convention as GameGridCard
-                color = MaterialTheme.colorScheme.primary.copy(
-                    alpha = if (checked) 0.80f else 0.45f
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = if (checked) 0.75f else 0.55f
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -615,8 +694,8 @@ private fun ToggleSettingItem(
 
         ArcadeToggle(
             checked = checked,
-            onCheckedChange = onCheckedChange,
-            hapticFeedbackEnabled = hapticFeedbackEnabled,
+            onCheckedChange = null,
+            hapticFeedbackEnabled = false,
             reduceAnimations = reduceAnimations
         )
     }
@@ -628,11 +707,11 @@ private fun ToggleSettingItem(
 private fun OrientationSettingItem(
     selected: ScreenOrientation,
     onSelect: (ScreenOrientation) -> Unit,
+    accentColor: Color? = null,
     hapticFeedbackEnabled: Boolean = true
 ) {
     val haptic = LocalHapticFeedback.current
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val primary = accentColor ?: MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
@@ -648,9 +727,9 @@ private fun OrientationSettingItem(
                 icon = painterResource(ScreenOrientation.Auto.iconRes),
                 tint = primary,
                 background = Brush.radialGradient(
-                    listOf(primary.copy(alpha = 0.18f), primary.copy(alpha = 0.04f))
+                    listOf(primary.copy(alpha = 0.22f), primary.copy(alpha = 0.05f))
                 ),
-                borderColor = primary.copy(alpha = 0.40f)
+                borderColor = primary.copy(alpha = 0.45f)
             )
             Column {
                 Text(
@@ -663,7 +742,7 @@ private fun OrientationSettingItem(
                 Text(
                     text = "Controls how the launcher rotates",
                     style = MaterialTheme.typography.bodySmall,
-                    color = primary.copy(alpha = 0.70f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                 )
             }
         }
@@ -675,23 +754,24 @@ private fun OrientationSettingItem(
         ) {
             ScreenOrientation.entries.forEach { orientation ->
                 val isSelected = selected == orientation
+                val chipShape = RoundedCornerShape(14.dp)
                 val chipContainer by animateColorAsState(
                     targetValue = if (isSelected)
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
-                    else MaterialTheme.colorScheme.surfaceContainerLow,
+                        primary.copy(alpha = 0.24f)
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     animationSpec = tween(AnimDuration),
                     label = "oriChip_$orientation"
                 )
                 val chipLabel by animateColorAsState(
                     targetValue = if (isSelected)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                        primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
                     animationSpec = tween(AnimDuration),
                     label = "oriLabel_$orientation"
                 )
                 val chipBorderStart by animateColorAsState(
                     targetValue = if (isSelected) primary.copy(alpha = 0.85f)
-                    else tertiary.copy(alpha = 0.30f),
+                    else Color.White.copy(alpha = 0.12f),
                     animationSpec = tween(AnimDuration),
                     label = "oriBorder_$orientation"
                 )
@@ -699,15 +779,15 @@ private fun OrientationSettingItem(
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .height(40.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(chipContainer, MaterialTheme.shapes.medium)
+                        .height(42.dp)
+                        .clip(chipShape)
+                        .background(chipContainer, chipShape)
                         .border(
                             1.dp,
                             Brush.linearGradient(
-                                listOf(chipBorderStart, Color.Transparent)
+                                listOf(chipBorderStart, chipBorderStart.copy(alpha = 0.20f))
                             ),
-                            MaterialTheme.shapes.medium
+                            chipShape
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -726,13 +806,13 @@ private fun OrientationSettingItem(
                         painter = painterResource(orientation.iconRes),
                         contentDescription = null,
                         tint = chipLabel,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = orientation.label,
                         style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = if (isSelected) FontWeight.SemiBold
+                            fontWeight = if (isSelected) FontWeight.Bold
                             else FontWeight.Medium
                         ),
                         color = chipLabel
@@ -749,11 +829,11 @@ private fun OrientationSettingItem(
 private fun GridColumnsSettingItem(
     selected: GridColumns,
     onSelect: (GridColumns) -> Unit,
+    accentColor: Color? = null,
     hapticFeedbackEnabled: Boolean = true
 ) {
     val haptic = LocalHapticFeedback.current
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val primary = accentColor ?: MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
@@ -769,9 +849,9 @@ private fun GridColumnsSettingItem(
                 icon = painterResource(R.drawable.round_category_24),
                 tint = primary,
                 background = Brush.radialGradient(
-                    listOf(primary.copy(alpha = 0.18f), primary.copy(alpha = 0.04f))
+                    listOf(primary.copy(alpha = 0.22f), primary.copy(alpha = 0.05f))
                 ),
-                borderColor = primary.copy(alpha = 0.40f)
+                borderColor = primary.copy(alpha = 0.45f)
             )
             Column {
                 Text(
@@ -784,7 +864,7 @@ private fun GridColumnsSettingItem(
                 Text(
                     text = "Games per row on the launcher grid",
                     style = MaterialTheme.typography.bodySmall,
-                    color = primary.copy(alpha = 0.70f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
                 )
             }
         }
@@ -796,38 +876,41 @@ private fun GridColumnsSettingItem(
         ) {
             GridColumns.entries.forEach { col ->
                 val isSelected = selected == col
+                val chipShape = RoundedCornerShape(14.dp)
                 val container by animateColorAsState(
                     targetValue = if (isSelected)
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
-                    else MaterialTheme.colorScheme.surfaceContainerLow,
+                        primary.copy(alpha = 0.24f)
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     animationSpec = tween(AnimDuration),
                     label = "gridChip_$col"
                 )
                 val labelColor by animateColorAsState(
                     targetValue = if (isSelected)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                        primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
                     animationSpec = tween(AnimDuration),
                     label = "gridLabel_$col"
+                )
+                val borderStroke by animateColorAsState(
+                    targetValue = if (isSelected) primary.copy(alpha = 0.85f)
+                    else Color.White.copy(alpha = 0.12f),
+                    animationSpec = tween(AnimDuration),
+                    label = "gridBorder_$col"
                 )
 
                 // Visual mini grid preview
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(container, MaterialTheme.shapes.medium)
+                        .height(58.dp)
+                        .clip(chipShape)
+                        .background(container, chipShape)
                         .border(
                             1.dp,
                             Brush.linearGradient(
-                                listOf(
-                                    if (isSelected) primary.copy(alpha = 0.85f)
-                                    else tertiary.copy(alpha = 0.30f),
-                                    Color.Transparent
-                                )
+                                listOf(borderStroke, borderStroke.copy(alpha = 0.20f))
                             ),
-                            MaterialTheme.shapes.medium
+                            chipShape
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -854,8 +937,8 @@ private fun GridColumnsSettingItem(
                                     Box(
                                         modifier = Modifier
                                             .size(dotSize)
-                                            .clip(MaterialTheme.shapes.extraSmall)
-                                            .background(labelColor.copy(alpha = 0.55f))
+                                            .clip(CircleShape)
+                                            .background(labelColor.copy(alpha = if (isSelected) 0.90f else 0.45f))
                                     )
                                 }
                             }
@@ -863,7 +946,7 @@ private fun GridColumnsSettingItem(
                         Spacer(Modifier.height(2.dp))
                         Text(
                             text = col.count.toString(),
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold
                                 else FontWeight.Medium
                             ),
@@ -884,11 +967,12 @@ private fun NavigationSettingItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
+    accentColor: Color? = null,
     isDestructive: Boolean = false,
     hapticFeedbackEnabled: Boolean = true
 ) {
     val haptic = LocalHapticFeedback.current
-    val primary = MaterialTheme.colorScheme.primary
+    val primary = accentColor ?: MaterialTheme.colorScheme.primary
     val error = MaterialTheme.colorScheme.error
     val accent = if (isDestructive) error else primary
 
@@ -896,17 +980,17 @@ private fun NavigationSettingItem(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val rowBackground by animateColorAsState(
-        targetValue = if (isPressed) accent.copy(alpha = 0.10f) else Color.Transparent,
+        targetValue = if (isPressed) accent.copy(alpha = 0.12f) else Color.Transparent,
         animationSpec = tween(AnimDuration),
         label = "navRowBg_$title"
     )
     val iconTint by animateColorAsState(
-        targetValue = if (isPressed) accent else accent.copy(alpha = 0.65f),
+        targetValue = if (isPressed) accent else accent.copy(alpha = 0.85f),
         animationSpec = tween(AnimDuration),
         label = "navIconTint_$title"
     )
     val chevronAlpha by animateFloatAsState(
-        targetValue = if (isPressed) 0.70f else 0.30f,
+        targetValue = if (isPressed) 0.85f else 0.40f,
         animationSpec = tween(AnimDuration),
         label = "navChevron_$title"
     )
@@ -934,16 +1018,16 @@ private fun NavigationSettingItem(
             icon = icon,
             tint = iconTint,
             background = Brush.radialGradient(
-                listOf(accent.copy(alpha = 0.15f), accent.copy(alpha = 0.04f))
+                listOf(accent.copy(alpha = 0.20f), accent.copy(alpha = 0.05f))
             ),
-            borderColor = iconTint.copy(alpha = 0.35f)
+            borderColor = iconTint.copy(alpha = 0.40f)
         )
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = if (isDestructive) error
                 else MaterialTheme.colorScheme.onSurface,
@@ -953,7 +1037,7 @@ private fun NavigationSettingItem(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = accent.copy(alpha = 0.65f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -965,9 +1049,8 @@ private fun NavigationSettingItem(
             contentDescription = null,
             tint = accent.copy(alpha = chevronAlpha),
             modifier = Modifier
-                .size(14.dp)
+                .size(16.dp)
                 .alpha(chevronAlpha)
-                // Rotate the back arrow to point right
                 .graphicsLayer(rotationZ = 180f)
         )
     }
@@ -975,7 +1058,7 @@ private fun NavigationSettingItem(
 
 // ─── Icon badge ───────────────────────────────────────────────────────────────
 
-/** Reusable icon badge — radial wash + gradient border, same as GameActionItem. */
+/** Reusable icon badge — radial wash + gradient border. */
 @Composable
 private fun SettingIconBadge(
     icon: Painter,
@@ -983,15 +1066,16 @@ private fun SettingIconBadge(
     background: Brush,
     borderColor: Color
 ) {
+    val badgeShape = RoundedCornerShape(12.dp)
     Box(
         modifier = Modifier
             .size(SettingIconBadgeSize)
-            .clip(MaterialTheme.shapes.small)
+            .clip(badgeShape)
             .background(background)
             .border(
                 1.dp,
-                Brush.linearGradient(listOf(borderColor, Color.Transparent)),
-                MaterialTheme.shapes.small
+                Brush.linearGradient(listOf(borderColor, borderColor.copy(alpha = 0.15f))),
+                badgeShape
             ),
         contentAlignment = Alignment.Center
     ) {

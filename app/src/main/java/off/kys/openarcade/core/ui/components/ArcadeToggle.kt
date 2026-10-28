@@ -37,7 +37,7 @@ import off.kys.openarcade.core.ui.util.AnimationUtils
 @Composable
 fun ArcadeToggle(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier,
     hapticFeedbackEnabled: Boolean = true,
     reduceAnimations: Boolean = false
@@ -103,8 +103,21 @@ fun ArcadeToggle(
         )
     }
 
+    val toggleModifier = if (onCheckedChange != null) {
+        modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {
+                if (hapticFeedbackEnabled) {
+                    hapticService.toggleSwitch(!checked)
+                }
+                onCheckedChange(!checked)
+            }
+        )
+    } else modifier
+
     Box(
-        modifier = modifier
+        modifier = toggleModifier
             .width(trackWidth)
             .height(trackHeight)
             .clip(CircleShape)
@@ -117,16 +130,6 @@ fun ArcadeToggle(
                 ) else Brush.linearGradient(listOf(trackColor, trackColor))
             )
             .border(1.dp, trackBorderBrush, CircleShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {
-                    if (hapticFeedbackEnabled) {
-                        hapticService.toggleSwitch(!checked)
-                    }
-                    onCheckedChange(!checked)
-                }
-            )
     ) {
         val travelDp = trackWidth - thumbSize - thumbPadding * 2
 

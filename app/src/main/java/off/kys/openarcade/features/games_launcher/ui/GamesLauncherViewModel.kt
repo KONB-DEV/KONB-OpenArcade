@@ -111,10 +111,6 @@ class GamesLauncherViewModel(
         val availableFilters = mutableListOf<GameFilter>()
         if (allGames.isNotEmpty()) {
             availableFilters.add(GameFilter.All)
-            availableFilters.add(GameFilter.Installed)
-            if (allGames.any { !it.isInstalled }) {
-                availableFilters.add(GameFilter.Uninstalled)
-            }
         }
         GameCategory.entries.forEach { category ->
             if (category != GameCategory.UNDEFINED && allGames.any { it.category == category }) {
@@ -297,16 +293,25 @@ class GamesLauncherViewModel(
                     ?: uiState.value?.favoriteGames?.find { it.packageName == packageName }
                     ?: uiState.value?.recentGames?.find { it.packageName == packageName }
                 val gameOrientation = launchGameUseCase.getGameOrientation(packageName)
-                appViewModel.setForcedOrientation(gameOrientation)
-                delay(150.milliseconds)
-                _launchingGame.value = game
-                delay(3150.milliseconds)
-                launchGameUseCase(packageName)
-                delay(1000.milliseconds)
-                _launchingGame.value = null
-                appViewModel.setForcedOrientation(null)
+                try {
+                    appViewModel.setForcedOrientation(gameOrientation)
+                    delay(150.milliseconds)
+                    _launchingGame.value = game
+                    delay(3150.milliseconds)
+                    launchGameUseCase(packageName)
+                    delay(1000.milliseconds)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    _launchingGame.value = null
+                    appViewModel.setForcedOrientation(null)
+                }
             } else {
-                launchGameUseCase(packageName)
+                try {
+                    launchGameUseCase(packageName)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }

@@ -64,6 +64,7 @@ import off.kys.openarcade.core.domain.repository.MediaRepository
 import off.kys.openarcade.core.ui.components.ArcadeCard
 import off.kys.openarcade.core.ui.components.ArcadeGameIcon
 import off.kys.openarcade.core.ui.theme.BentoTokens
+import off.kys.openarcade.core.ui.util.squishElasticPress
 import off.kys.openarcade.core.util.LocalHapticFeedbackService
 import off.kys.openarcade.features.games_launcher.ui.GamesLauncherUiEvent
 import org.koin.compose.koinInject
@@ -147,6 +148,7 @@ fun GameGridCard(
     ArcadeCard(
         modifier = modifier
             .fillMaxWidth()
+            .squishElasticPress(reduceAnimations = reduceAnimations)
             .graphicsLayer {
                 scaleX = expansionScale
                 scaleY = expansionScale

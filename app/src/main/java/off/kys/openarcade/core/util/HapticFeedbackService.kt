@@ -48,11 +48,11 @@ class HapticFeedbackServiceImpl(
     private fun isHapticsEnabled(): Boolean = prefs.hapticFeedback.value
 
     private fun vibratePredefinedOrOneShot(predefinedEffect: Int, durationMs: Long, amplitude: Int = VibrationEffect.DEFAULT_AMPLITUDE) {
-        if (!isHapticsEnabled()) return
-        val v = vibrator ?: return
-        if (!v.hasVibrator()) return
-
         try {
+            if (!isHapticsEnabled()) return
+            val v = vibrator ?: return
+            if (!v.hasVibrator()) return
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 v.vibrate(VibrationEffect.createPredefined(predefinedEffect))
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -61,24 +61,24 @@ class HapticFeedbackServiceImpl(
                 @Suppress("DEPRECATION")
                 v.vibrate(durationMs)
             }
-        } catch (_: Exception) {
-            // Graceful fallback for devices with proprietary/restricted haptic drivers
+        } catch (_: Throwable) {
+            // Graceful fallback for devices with proprietary/restricted haptic drivers or security restrictions
         }
     }
 
     private fun vibrateWaveform(timings: LongArray, amplitudes: IntArray) {
-        if (!isHapticsEnabled()) return
-        val v = vibrator ?: return
-        if (!v.hasVibrator()) return
-
         try {
+            if (!isHapticsEnabled()) return
+            val v = vibrator ?: return
+            if (!v.hasVibrator()) return
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 v.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
             } else {
                 @Suppress("DEPRECATION")
                 v.vibrate(timings, -1)
             }
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             // Graceful fallback
         }
     }

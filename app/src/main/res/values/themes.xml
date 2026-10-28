@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.OpenArcade" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.OpenArcade" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/abyssal_dark</item>
+        <item name="android:colorBackground">@color/abyssal_dark</item>
+        <item name="android:navigationBarColor">@color/abyssal_dark</item>
+        <item name="android:statusBarColor">@color/abyssal_dark</item>
+    </style>
 
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>

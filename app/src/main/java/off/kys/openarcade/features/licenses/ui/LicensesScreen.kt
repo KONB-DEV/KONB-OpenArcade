@@ -1,5 +1,6 @@
 package off.kys.openarcade.features.licenses.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -74,6 +75,10 @@ class LicensesScreen : Screen {
         }
 
         val totalCount = libraries.values.sumOf { it.size }
+
+        BackHandler {
+            navigator.pop()
+        }
 
         Scaffold(
             topBar = {

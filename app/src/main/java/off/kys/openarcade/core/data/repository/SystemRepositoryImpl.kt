@@ -78,8 +78,12 @@ class SystemRepositoryImpl(
         val launchIntent = pm.getLaunchIntentForPackage(packageName)
         return if (launchIntent != null) {
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            application.startActivity(launchIntent)
-            true
+            try {
+                application.startActivity(launchIntent)
+                true
+            } catch (_: Exception) {
+                false
+            }
         } else {
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 data = "market://details?id=$packageName".toUri()

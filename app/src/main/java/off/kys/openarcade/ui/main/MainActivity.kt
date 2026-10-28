@@ -38,57 +38,66 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        window.decorView.setBackgroundColor(android.graphics.Color.parseColor("#0A0E1A"))
         setContent {
             val appState by viewModel.appState.collectAsStateWithLifecycle()
-            val launcherUiState by launcherViewModel.uiState.collectAsStateWithLifecycle()
+            val readyData = (appState as? AppState.Ready)?.data
 
-            if (appState is AppState.Ready && launcherUiState != null) {
-                val data = (appState as AppState.Ready).data
+            val immersiveMode = readyData?.immersiveMode ?: false
+            val keepScreenOn = readyData?.keepScreenOn ?: false
+            val screenOrientation = readyData?.screenOrientation ?: ScreenOrientation.Auto
+            val forcedOrientation = readyData?.forcedOrientation
+            val reduceAnimations = readyData?.reduceAnimations ?: false
 
-                LaunchedEffect(data.immersiveMode) {
-                    val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-                    if (data.immersiveMode) {
-                        windowInsetsController.systemBarsBehavior =
-                            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-                    } else {
-                        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+            LaunchedEffect(immersiveMode) {
+                val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+                if (immersiveMode) {
+                    windowInsetsController.systemBarsBehavior =
+                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+                } else {
+                    windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+                }
+            }
+
+            LaunchedEffect(keepScreenOn) {
+                if (keepScreenOn) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+
+            LaunchedEffect(screenOrientation, forcedOrientation) {
+                val target = if (forcedOrientation != null) {
+                    forcedOrientation
+                } else {
+                    when (screenOrientation) {
+                        ScreenOrientation.Auto -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        ScreenOrientation.Portrait -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        ScreenOrientation.Landscape -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                     }
                 }
-
-                LaunchedEffect(data.keepScreenOn) {
-                    if (data.keepScreenOn) {
-                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    } else {
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    }
+                if (requestedOrientation != target) {
+                    requestedOrientation = target
                 }
+            }
 
-                LaunchedEffect(data.screenOrientation, data.forcedOrientation) {
-                    if (data.forcedOrientation != null) {
-                        requestedOrientation = data.forcedOrientation
-                    } else {
-                        requestedOrientation = when (data.screenOrientation) {
-                            ScreenOrientation.Auto -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                            ScreenOrientation.Portrait -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                            ScreenOrientation.Landscape -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        }
-                    }
-                }
+            val hapticService: HapticFeedbackService = koinInject()
 
-                val hapticService: HapticFeedbackService = koinInject()
-
-                CompositionLocalProvider(
-                    LocalHapticFeedbackService provides hapticService
-                ) {
-                    OpenArcadeTheme {
-                        Navigator(GamesLauncherScreen()) { navigator ->
-                            off.kys.openarcade.core.ui.components.SpringScreenTransition(
-                                navigator = navigator,
-                                reduceAnimations = data.reduceAnimations,
-                                hapticService = hapticService
-                            )
-                        }
+            CompositionLocalProvider(
+                LocalHapticFeedbackService provides hapticService
+            ) {
+                OpenArcadeTheme {
+                    Navigator(
+                        screen = GamesLauncherScreen(),
+                        key = "OpenArcadeRootNavigator"
+                    ) { navigator ->
+                        off.kys.openarcade.core.ui.components.SpringScreenTransition(
+                            navigator = navigator,
+                            reduceAnimations = reduceAnimations,
+                            hapticService = hapticService
+                        )
                     }
                 }
             }

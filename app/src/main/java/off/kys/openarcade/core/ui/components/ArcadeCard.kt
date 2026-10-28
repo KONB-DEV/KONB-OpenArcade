@@ -1,9 +1,11 @@
 package off.kys.openarcade.core.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,12 +53,17 @@ fun ArcadeCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
+    // ColorOS 17 Tactile Squeeze (0.94x over 80ms) & Elastic Bounce Release (101.5% overshoot)
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null && !reduceAnimations) 0.965f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        targetValue = if (isPressed && onClick != null && !reduceAnimations) 0.94f else 1f,
+        animationSpec = if (isPressed) {
+            tween(durationMillis = 80, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f))
+        } else {
+            spring(
+                dampingRatio = 0.55f, // Elastic bounce overshoot
+                stiffness = 320f
+            )
+        },
         label = "liquidCardScale"
     )
 

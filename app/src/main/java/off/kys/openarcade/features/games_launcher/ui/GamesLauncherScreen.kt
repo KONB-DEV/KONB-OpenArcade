@@ -3,6 +3,9 @@ package off.kys.openarcade.features.games_launcher.ui
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.snap
@@ -137,14 +140,7 @@ class GamesLauncherScreen : Screen {
                         verticalArrangement = Arrangement.spacedBy(BentoTokens.GridGutter)
                     ) {
                         item(key = "hero_section", span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem(
-                                fadeInSpec = if (state.reduceAnimations) snap() else tween(300),
-                                fadeOutSpec = if (state.reduceAnimations) snap() else tween(300),
-                                placementSpec = if (state.reduceAnimations) snap() else spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessMediumLow
-                                )
-                            )) {
+                            Box {
                                 AnimatedContent(
                                     targetState = state.filteredGames.isNotEmpty(),
                                     transitionSpec = {
@@ -160,12 +156,12 @@ class GamesLauncherScreen : Screen {
                                         HeroBannerPager(
                                             installedGames = state.filteredGames.filter { it.isInstalled },
                                             onInspectGame = { pkg ->
-                                                if (state.skipGameDetails) {
-                                                    viewModel.onEvent(GamesLauncherUiEvent.LaunchGameRequested(pkg))
-                                                } else {
-                                                    viewModel.onEvent(GamesLauncherUiEvent.GameClicked(pkg))
-                                                    navigator.push(GameDetailScreen(pkg))
-                                                }
+                                                // Always open game details when compass/inspect is pressed
+                                                viewModel.onEvent(GamesLauncherUiEvent.GameClicked(pkg))
+                                                navigator.push(GameDetailScreen(pkg))
+                                            },
+                                            onPlayGame = { pkg ->
+                                                viewModel.onEvent(GamesLauncherUiEvent.LaunchGameRequested(pkg))
                                             },
                                             onFeaturedColorChanged = { color ->
                                                 featuredColor = color
@@ -173,58 +169,77 @@ class GamesLauncherScreen : Screen {
                                             reduceAnimations = state.reduceAnimations
                                         )
                                     } else {
-                                    EmptyGamesState()
+                                        EmptyGamesState()
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    item(key = "filter_chips", span = { GridItemSpan(maxLineSpan) }) {
-                        Box(Modifier.animateItem()) {
-                            FilterChipsRow(
-                                uiState = state,
-                                onFilterSelected = { filter ->
-                                    viewModel.onEvent(GamesLauncherUiEvent.FilterSelected(filter))
-                                },
-                                onSettingsClick = { navigator.push(SettingsScreen()) },
-                                onSectionsEdit = { showSectionEdit = true }
-                            )
+                        item(key = "filter_chips", span = { GridItemSpan(maxLineSpan) }) {
+                            Box {
+                                FilterChipsRow(
+                                    uiState = state,
+                                    onFilterSelected = { filter ->
+                                        viewModel.onEvent(GamesLauncherUiEvent.FilterSelected(filter))
+                                    },
+                                    onSettingsClick = { navigator.push(SettingsScreen()) },
+                                    onSectionsEdit = { showSectionEdit = true }
+                                )
+                            }
                         }
-                    }
 
-                    if (!state.hasUsageStatsPermission) {
-                        item(key = "usage_permission", span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
-                                UsagePermissionCard {
-                                    viewModel.onEvent(GamesLauncherUiEvent.GrantPermissionClicked)
-                                    context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                        if (!state.hasUsageStatsPermission) {
+                            item(key = "usage_permission", span = { GridItemSpan(maxLineSpan) }) {
+                                Box {
+                                    UsagePermissionCard {
+                                        viewModel.onEvent(GamesLauncherUiEvent.GrantPermissionClicked)
+                                        context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (LauncherSection.SYSTEM_STATUS in state.visibleSections) {
-                        item(key = LauncherSection.SYSTEM_STATUS, span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
+                        item(key = "section_system_status", span = { GridItemSpan(maxLineSpan) }) {
+                            AnimatedVisibility(
+                                visible = LauncherSection.SYSTEM_STATUS in state.visibleSections,
+                                enter = expandVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeIn(),
+                                exit = shrinkVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeOut()
+                            ) {
                                 SystemStatusSection(
                                     batteryLevel = state.batteryLevel,
                                     storageUsage = state.storageUsage
                                 )
                             }
                         }
-                    }
 
-                    if (LauncherSection.ANALYTICS in state.visibleSections) {
-                        item(key = LauncherSection.ANALYTICS, span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
+                        item(key = "section_analytics", span = { GridItemSpan(maxLineSpan) }) {
+                            AnimatedVisibility(
+                                visible = LauncherSection.ANALYTICS in state.visibleSections,
+                                enter = expandVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeIn(),
+                                exit = shrinkVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeOut()
+                            ) {
                                 AnalyticsSection(state.filteredGames)
                             }
                         }
-                    }
 
-                    if (LauncherSection.FAVORITES in state.visibleSections && state.favoriteGames.isNotEmpty()) {
-                        item(key = LauncherSection.FAVORITES, span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
+                        item(key = "section_favorites", span = { GridItemSpan(maxLineSpan) }) {
+                            AnimatedVisibility(
+                                visible = LauncherSection.FAVORITES in state.visibleSections && state.favoriteGames.isNotEmpty(),
+                                enter = expandVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeIn(),
+                                exit = shrinkVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeOut()
+                            ) {
                                 FavoritesSection(
                                     games = state.favoriteGames,
                                     onGameClick = { pkg ->
@@ -240,11 +255,17 @@ class GamesLauncherScreen : Screen {
                                 )
                             }
                         }
-                    }
 
-                    if (LauncherSection.RECENT_ACTIVITY in state.visibleSections && state.recentGames.isNotEmpty()) {
-                        item(key = LauncherSection.RECENT_ACTIVITY, span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
+                        item(key = "section_recent_activity", span = { GridItemSpan(maxLineSpan) }) {
+                            AnimatedVisibility(
+                                visible = LauncherSection.RECENT_ACTIVITY in state.visibleSections && state.recentGames.isNotEmpty(),
+                                enter = expandVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeIn(),
+                                exit = shrinkVertically(
+                                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+                                ) + fadeOut()
+                            ) {
                                 RecentActivitySection(
                                     games = state.recentGames,
                                     onGameClick = { pkg ->
@@ -260,24 +281,23 @@ class GamesLauncherScreen : Screen {
                                 )
                             }
                         }
-                    }
 
-                    if (state.filteredGames.isNotEmpty()) {
-                        item(key = "library_header", span = { GridItemSpan(maxLineSpan) }) {
-                            Box(Modifier.animateItem()) {
-                                LibraryHeader(
-                                    gameCount = state.filteredGames.size,
-                                    selectedSort = state.selectedSort,
-                                    onSortSelected = { sort ->
-                                        viewModel.onEvent(GamesLauncherUiEvent.SortSelected(sort))
-                                    },
-                                    onAddGamesClick = {
-                                        navigator.push(AppPickerScreen())
-                                    }
-                                )
+                        if (state.filteredGames.isNotEmpty()) {
+                            item(key = "library_header", span = { GridItemSpan(maxLineSpan) }) {
+                                Box {
+                                    LibraryHeader(
+                                        gameCount = state.filteredGames.size,
+                                        selectedSort = state.selectedSort,
+                                        onSortSelected = { sort ->
+                                            viewModel.onEvent(GamesLauncherUiEvent.SortSelected(sort))
+                                        },
+                                        onAddGamesClick = {
+                                            navigator.push(AppPickerScreen())
+                                        }
+                                    )
+                                }
                             }
                         }
-                    }
 
                     items(state.filteredGames, key = { it.packageName }) { game ->
                         GameGridCard(

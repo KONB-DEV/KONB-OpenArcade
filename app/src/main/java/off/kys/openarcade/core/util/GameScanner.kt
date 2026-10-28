@@ -57,7 +57,9 @@ class GameScanner(private val context: Context) {
                 }
 
                 val palette = try {
-                    Palette.from(icon.toBitmap()).generate()
+                    val width = if (icon.intrinsicWidth > 0) icon.intrinsicWidth.coerceIn(48, 192) else 96
+                    val height = if (icon.intrinsicHeight > 0) icon.intrinsicHeight.coerceIn(48, 192) else 96
+                    Palette.from(icon.toBitmap(width = width, height = height)).generate()
                 } catch (_: Exception) {
                     null
                 }
@@ -93,7 +95,9 @@ class GameScanner(private val context: Context) {
             Log.d("GameScanner", "No games found, using fallback")
             val icon = context.applicationInfo.loadIcon(pm)
             val palette = try {
-                Palette.from(icon.toBitmap()).generate()
+                val width = if (icon.intrinsicWidth > 0) icon.intrinsicWidth.coerceIn(48, 192) else 96
+                val height = if (icon.intrinsicHeight > 0) icon.intrinsicHeight.coerceIn(48, 192) else 96
+                Palette.from(icon.toBitmap(width = width, height = height)).generate()
             } catch (_: Exception) {
                 null
             }

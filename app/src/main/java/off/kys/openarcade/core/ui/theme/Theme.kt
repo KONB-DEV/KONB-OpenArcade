@@ -82,7 +82,7 @@ private val AquaDarkColorScheme = darkColorScheme(
 
 @Composable
 fun OpenArcadeTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     // Keep dynamic color or allow our signature theme
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit

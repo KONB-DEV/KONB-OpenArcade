@@ -19,6 +19,19 @@ class OpenArcadeApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("OpenArcadeSafety", "Uncaught exception intercepted in ${thread.name}", throwable)
+            if (throwable is NullPointerException || throwable is IndexOutOfBoundsException || throwable is IllegalArgumentException) {
+                val stack = throwable.stackTraceToString()
+                if (stack.contains("LazyLayout") || stack.contains("ItemAnimator") || stack.contains("SaveableStateRegistry")) {
+                    android.util.Log.w("OpenArcadeSafety", "Recovered from LazyLayout animation desync without terminating application")
+                    return@setDefaultUncaughtExceptionHandler
+                }
+            }
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+
         startKoin {
             androidLogger(if (BuildConfig.DEBUG) Level.DEBUG else Level.NONE)
             androidContext(this@OpenArcadeApplication)

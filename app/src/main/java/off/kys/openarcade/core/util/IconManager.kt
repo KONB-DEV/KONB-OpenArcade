@@ -41,7 +41,9 @@ class IconManager(private val context: Context) {
 
     fun saveExtractedIcon(packageName: String, drawable: Drawable): String? {
         return try {
-            val bitmap = drawable.toBitmap()
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 192
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 192
+            val bitmap = drawable.toBitmap(width = width, height = height)
             val iconDir = File(context.filesDir, CACHED_ICONS_DIR)
             if (!iconDir.exists()) iconDir.mkdirs()
 

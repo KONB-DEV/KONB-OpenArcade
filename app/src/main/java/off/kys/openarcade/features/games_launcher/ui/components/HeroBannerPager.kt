@@ -61,6 +61,7 @@ fun HeroBannerPager(
     modifier: Modifier = Modifier,
     installedGames: List<GameEntry>,
     onInspectGame: (String) -> Unit,
+    onPlayGame: (String) -> Unit = onInspectGame,
     onFeaturedColorChanged: ((Color) -> Unit)? = null,
     reduceAnimations: Boolean = false,
     mediaRepository: MediaRepository = koinInject()
@@ -87,7 +88,7 @@ fun HeroBannerPager(
             } catch (_: Exception) {
                 null
             }
-            val top5 = mediaRepository.extractTop5ProminentColors(drawable, isDark)
+            val top5 = mediaRepository.extractTop5ProminentColors(drawable, isDark = isDark)
             val dominantAdaptive = top5.firstOrNull() ?: mediaRepository.getAdaptiveColor(currentGame.getPrimaryColor(), isDark)
             onFeaturedColorChanged?.invoke(dominantAdaptive)
         }
@@ -109,7 +110,7 @@ fun HeroBannerPager(
                 .fillMaxWidth()
                 .height(310.dp)
         ) { page ->
-            val game = installedGames[page]
+            val game = installedGames.getOrNull(page) ?: return@HorizontalPager
             val iconModel = remember(game.packageName, game.customIconPath) {
                 game.customIconPath
                     ?: try {
@@ -132,7 +133,7 @@ fun HeroBannerPager(
                 } catch (_: Exception) {
                     null
                 }
-                mediaRepository.extractTop5ProminentColors(drawable, isDark)
+                mediaRepository.extractTop5ProminentColors(drawable, isDark = isDark)
             }
 
             // 45-degree 5-stop animated linear gradient with soft breathing dynamics
@@ -334,12 +335,12 @@ fun HeroBannerPager(
                                 ),
                                 CircleShape
                             )
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             // Left: Inspect glass circular button
                             Box(
@@ -362,7 +363,7 @@ fun HeroBannerPager(
                                 )
                             }
 
-                            // Center: "PLAY" Stadium Pill Button
+                            // "PLAY" Stadium Pill Button
                             Box(
                                 modifier = Modifier
                                     .clip(CircleShape)
@@ -383,9 +384,9 @@ fun HeroBannerPager(
                                     )
                                     .clickable {
                                         hapticService.actionLaunch()
-                                        onInspectGame(game.packageName)
+                                        onPlayGame(game.packageName)
                                     }
-                                    .padding(horizontal = 24.dp, vertical = 10.dp),
+                                    .padding(horizontal = 26.dp, vertical = 10.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
@@ -407,24 +408,6 @@ fun HeroBannerPager(
                                         color = Color.Black
                                     )
                                 }
-                            }
-
-                            // Right: Game launch / favorite icon button
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.12f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.35f), CircleShape)
-                                    .clickable { onInspectGame(game.packageName) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.round_sports_esports_24),
-                                    contentDescription = "Launch",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
                             }
                         }
                     }

@@ -1,5 +1,6 @@
 package off.kys.openarcade.features.app_picker.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,10 @@ class AppPickerScreen : Screen {
             if (uiState.isDone) {
                 navigator.pop()
             }
+        }
+
+        BackHandler {
+            navigator.pop()
         }
 
         Scaffold(

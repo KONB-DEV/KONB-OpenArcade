@@ -1,6 +1,7 @@
 package off.kys.openarcade.core.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -168,11 +169,15 @@ fun ArcadeButton(
         label = "btnLabel"
     )
     val scale by animateFloatAsState(
-        targetValue = if (effectivePressed) 0.95f else 1f,
-        animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-        ),
+        targetValue = if (effectivePressed) 0.94f else 1f,
+        animationSpec = if (effectivePressed) {
+            tween(durationMillis = 80, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f))
+        } else {
+            androidx.compose.animation.core.spring(
+                dampingRatio = 0.55f, // Elastic bounce
+                stiffness = 320f
+            )
+        },
         label = "btnScale"
     )
 

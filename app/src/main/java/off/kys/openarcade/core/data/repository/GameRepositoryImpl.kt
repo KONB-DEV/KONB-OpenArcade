@@ -167,8 +167,12 @@ class GameRepositoryImpl(
                 add(Calendar.DAY_OF_YEAR, 1)
             }
             
-            val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start.timeInMillis, end.timeInMillis)
-            val totalTime = stats.sumOf { it.totalTimeInForeground }
+            val stats = try {
+                usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start.timeInMillis, end.timeInMillis)
+            } catch (_: Exception) {
+                null
+            }
+            val totalTime = stats?.sumOf { it.totalTimeInForeground } ?: 0L
             dailyTrend.add(PlayTimePoint(dayFormat.format(start.time), totalTime, start.timeInMillis))
         }
 
@@ -188,8 +192,12 @@ class GameRepositoryImpl(
                 add(Calendar.WEEK_OF_YEAR, 1)
             }
             
-            val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_WEEKLY, start.timeInMillis, end.timeInMillis)
-            val totalTime = stats.sumOf { it.totalTimeInForeground }
+            val stats = try {
+                usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_WEEKLY, start.timeInMillis, end.timeInMillis)
+            } catch (_: Exception) {
+                null
+            }
+            val totalTime = stats?.sumOf { it.totalTimeInForeground } ?: 0L
             weeklyTrend.add(PlayTimePoint("W${4-i}", totalTime, start.timeInMillis))
         }
 
