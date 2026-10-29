@@ -161,45 +161,6 @@ fun LaunchOverlay(
         )
     }
 
-    val scanBarAlpha by if (reduceAnimations) {
-        animateFloatAsState(0.70f, label = "scanAlphaStatic")
-    } else {
-        infinite.animateFloat(
-            initialValue = 0.30f,
-            targetValue = 1.00f,
-            animationSpec = infiniteRepeatable(
-                tween(900, easing = EaseInOutSine),
-                RepeatMode.Reverse
-            ),
-            label = "scanAlpha"
-        )
-    }
-
-    val ringRotation by if (reduceAnimations) {
-        remember { mutableFloatStateOf(0f) }
-    } else {
-        infinite.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                tween(8000, easing = LinearEasing)
-            ),
-            label = "ringRotation"
-        )
-    }
-    val ringRotation2 by if (reduceAnimations) {
-        remember { mutableFloatStateOf(0f) }
-    } else {
-        infinite.animateFloat(
-            initialValue = 360f,
-            targetValue = 0f,
-            animationSpec = infiniteRepeatable(
-                tween(14000, easing = LinearEasing)
-            ),
-            label = "ringRotation2"
-        )
-    }
-
     AnimatedVisibility(
         visible = isVisible,
         enter = scaleIn(
@@ -215,13 +176,15 @@ fun LaunchOverlay(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFF070B14))
                 .background(
                     Brush.radialGradient(
-                        colorStops = arrayOf(
-                            0.00f to primary.copy(alpha = 0.22f),
-                            0.45f to Color.Black.copy(alpha = 0.88f),
-                            1.00f to Color.Black.copy(alpha = 0.97f)
-                        )
+                        colors = listOf(
+                            primary.copy(alpha = 0.35f),
+                            primary.copy(alpha = 0.12f),
+                            Color.Transparent
+                        ),
+                        radius = 900f
                     )
                 ),
             contentAlignment = Alignment.Center
@@ -242,44 +205,6 @@ fun LaunchOverlay(
                     )
             )
 
-            if (phase >= 3 && (!reduceAnimations)) {
-                Box(
-                    modifier = Modifier
-                        .size(HaloBaseSize + RingGap * 2.5f)
-                        .align(Alignment.Center)
-                        .drawWithContent {
-                            rotate(ringRotation2) {
-                                drawArcRing(
-                                    color = tertiary.copy(alpha = 0.18f),
-                                    strokeWidth = 1.dp.toPx(),
-                                    dashed = true
-                                )
-                            }
-                            drawContent()
-                        }
-                )
-            }
-
-            if (phase >= 3 && (!reduceAnimations)) {
-                Box(
-                    modifier = Modifier
-                        .size(HaloBaseSize + RingGap)
-                        .align(Alignment.Center)
-                        .drawWithContent {
-                            rotate(ringRotation) {
-                                drawArcRing(
-                                    color = primary.copy(alpha = 0.30f),
-                                    strokeWidth = 1.5.dp.toPx(),
-                                    dashed = false,
-                                    sweepFraction = 0.30f
-                                )
-                            }
-                            drawContent()
-                        }
-                )
-            }
-
-
             Box(
                 modifier = Modifier
                     .size(HaloBaseSize)
@@ -288,30 +213,12 @@ fun LaunchOverlay(
                     .background(
                         Brush.radialGradient(
                             listOf(
-                                primary.copy(alpha = if (phase >= 1) haloAlpha * 0.55f else 0f),
+                                primary.copy(alpha = if (phase >= 1) haloAlpha * 0.45f else 0f),
                                 primary.copy(alpha = if (phase >= 1) haloAlpha * 0.12f else 0f),
                                 Color.Transparent
                             )
                         )
                     )
-                    .drawBehind {
-                        drawIntoCanvas { canvas ->
-                            val paint = Paint().nativePaint.apply {
-                                isAntiAlias = true
-                                color = android.graphics.Color.TRANSPARENT
-                                setShadowLayer(
-                                    size.minDimension * 0.35f,
-                                    0f, 0f,
-                                    primary.copy(alpha = 0.45f).toArgb()
-                                )
-                            }
-                            canvas.nativeCanvas.drawCircle(
-                                size.width / 2f, size.height / 2f,
-                                size.minDimension / 2f,
-                                paint
-                            )
-                        }
-                    }
             )
 
             Column(
@@ -331,7 +238,9 @@ fun LaunchOverlay(
                         modifier = Modifier.size(IconSize),
                         primaryColor = primary,
                         tertiaryColor = tertiary,
-                        iconSize = InnerIconSize
+                        iconSize = InnerIconSize,
+                        showContainerBorder = false,
+                        showBackgroundBloom = true
                     )
                 }
 
@@ -357,33 +266,13 @@ fun LaunchOverlay(
                 Text(
                     text = game?.packageName ?: "",
                     style = MaterialTheme.typography.labelSmall,
-                    color = primary.copy(alpha = 0.55f),
+                    color = primary.copy(alpha = 0.65f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.alpha(titleAlpha)
                 )
 
-                Spacer(Modifier.height(32.dp))
-
-
-                Box(
-                    modifier = Modifier
-                        .width(ScanBarWidth)
-                        .height(ScanBarHeight)
-                        .alpha(if (phase >= 2) scanBarAlpha else 0f)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    primary.copy(alpha = 0.90f),
-                                    tertiary.copy(alpha = 0.55f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(36.dp))
 
                 LaunchProgressBar(
                     progress = progressAnim.value,
@@ -394,7 +283,7 @@ fun LaunchOverlay(
                         .alpha(if (phase >= 2) 1f else 0f)
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(14.dp))
 
                 LaunchStatusLabel(
                     progress = progressAnim.value,
@@ -473,55 +362,4 @@ private fun LaunchStatusLabel(
         color = primary.copy(alpha = 0.85f),
         modifier = modifier
     )
-}
-
-/**
- * Draws a partial or full arc ring centered in the DrawScope.
- * [sweepFraction] = 1.0 → full circle; 0.30 → 30% arc segment.
- * [dashed] draws evenly spaced segments instead of a continuous stroke.
- */
-private fun DrawScope.drawArcRing(
-    color: Color,
-    strokeWidth: Float,
-    dashed: Boolean,
-    sweepFraction: Float = 1.0f
-) {
-    val radius = size.minDimension / 2f - strokeWidth / 2f
-    val cx = size.width / 2f
-    val cy = size.height / 2f
-
-    if (dashed) {
-        val segmentCount = 24
-        val segmentSweep = 360f / segmentCount * 0.5f
-        repeat(segmentCount) { i ->
-            val startAngle = i * (360f / segmentCount)
-            drawArc(
-                color = color,
-                startAngle = startAngle,
-                sweepAngle = segmentSweep,
-                useCenter = false,
-                style = Stroke(
-                    width = strokeWidth,
-                    cap = StrokeCap.Round
-                ),
-                topLeft = Offset(cx - radius, cy - radius),
-                size = Size(radius * 2, radius * 2)
-            )
-        }
-    } else {
-        drawArc(
-            brush = Brush.sweepGradient(
-                listOf(Color.Transparent, color, Color.Transparent)
-            ),
-            startAngle = 0f,
-            sweepAngle = 360f * sweepFraction,
-            useCenter = false,
-            style = Stroke(
-                width = strokeWidth,
-                cap = StrokeCap.Round
-            ),
-            topLeft = Offset(cx - radius, cy - radius),
-            size = Size(radius * 2, radius * 2)
-        )
-    }
 }

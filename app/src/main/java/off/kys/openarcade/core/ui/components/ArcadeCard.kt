@@ -67,7 +67,9 @@ fun ArcadeCard(
         label = "liquidCardScale"
     )
 
-    // Dynamic Tinting System: adjusts frosted glass slightly based on featured game artwork primary color
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    // Dynamic Tinting System: adjusts frosted glass based on wallpaper / featured game artwork
     val featuredArtworkTint = off.kys.openarcade.core.ui.theme.LocalFeaturedGameTint.current
     val effectiveArtworkColor = remember(featuredArtworkTint, accentColor) {
         if (featuredArtworkTint.isSpecified &&
@@ -80,33 +82,37 @@ fun ArcadeCard(
         }
     }
 
-    val baseSurface = MaterialTheme.colorScheme.surfaceVariant
-    // Blends base frosted acrylic with 8% of the extracted artwork primary color
-    val dynamicallyTintedBase = remember(baseSurface, effectiveArtworkColor) {
-        off.kys.openarcade.core.ui.theme.getDynamicGlassSurface(
-            baseSurface = baseSurface,
-            artworkPrimary = effectiveArtworkColor,
-            tintWeight = 0.08f
-        ).copy(alpha = 0.72f)
+    // Dynamic Cloudy Backdrop: samples wallpaper/artwork color with organic diffusion
+    val cloudyBase = if (isDark) {
+        Color(0xFF101726).copy(alpha = 0.80f)
+    } else {
+        Color(0xFFF8FAFC).copy(alpha = 0.86f)
     }
 
-    val pressedGlass = effectiveArtworkColor.copy(alpha = 0.22f)
+    val dynamicCloudyBase = remember(cloudyBase, effectiveArtworkColor, isDark) {
+        off.kys.openarcade.core.ui.theme.getDynamicGlassSurface(
+            baseSurface = cloudyBase,
+            artworkPrimary = effectiveArtworkColor,
+            tintWeight = if (isDark) 0.14f else 0.08f
+        )
+    }
+
+    val pressedGlass = effectiveArtworkColor.copy(alpha = if (isDark) 0.28f else 0.22f)
 
     val animatedTint by animateColorAsState(
-        targetValue = if (isPressed && onClick != null) pressedGlass else dynamicallyTintedBase,
+        targetValue = if (isPressed && onClick != null) pressedGlass else dynamicCloudyBase,
         animationSpec = AnimationUtils.animationSpec(reduceAnimations, 350),
         label = "frostedCardTint"
     )
 
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
-    // Samsung One UI 9 Directional Specular Border: Top/Left 20% white, Bottom/Right 8% white
+    // Samsung One UI 9 Directional Specular Border: Top/Left 24% white, Bottom/Right 8% white
     val borderBrush = remember(isDark, effectiveArtworkColor, isPressed) {
-        val topAlpha = if (isPressed) 0.38f else (if (isDark) 0.20f else 0.32f)
-        val bottomAlpha = if (isPressed) 0.16f else (if (isDark) 0.08f else 0.12f)
+        val topAlpha = if (isPressed) 0.45f else (if (isDark) 0.24f else 0.40f)
+        val bottomAlpha = if (isPressed) 0.20f else (if (isDark) 0.08f else 0.14f)
         Brush.linearGradient(
             colorStops = arrayOf(
                 0.0f to Color.White.copy(alpha = topAlpha),
-                0.45f to effectiveArtworkColor.copy(alpha = topAlpha * 0.70f),
+                0.40f to effectiveArtworkColor.copy(alpha = if (isDark) 0.28f else 0.35f),
                 1.0f to Color.White.copy(alpha = bottomAlpha)
             ),
             start = Offset(0f, 0f),
@@ -130,11 +136,22 @@ fun ArcadeCard(
                 scaleY = scale
             }
             .clip(shape)
-            .background(backgroundGradient)
-            // Layer 3: Samsung One UI 9 Milky Substrate
+            // Layer 1: Ambient Wallpaper Color Refraction (Cloudy Backdrop Bloom)
             .background(
-                if (isDark) Color(0xFF121212).copy(alpha = 0.18f)
-                else Color(0xFFFFFFFF).copy(alpha = 0.12f)
+                Brush.radialGradient(
+                    colors = listOf(
+                        effectiveArtworkColor.copy(alpha = if (isDark) 0.20f else 0.14f),
+                        Color.Transparent
+                    ),
+                    radius = 500f
+                )
+            )
+            // Layer 2: Cloudy Frosted Substrate
+            .background(backgroundGradient)
+            // Layer 3: Samsung One UI 9 Cloudy Milky Substrate
+            .background(
+                if (isDark) Color(0xFFFFFFFF).copy(alpha = 0.04f)
+                else Color(0xFFFFFFFF).copy(alpha = 0.35f)
             )
             .border(borderWidth, borderBrush, shape)
             .then(

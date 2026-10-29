@@ -88,6 +88,7 @@ fun ArcadeBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         containerColor = Color.Transparent,
+        scrimColor = Color(0xFF03060C).copy(alpha = 0.70f),
         dragHandle = null,
         contentWindowInsets = { WindowInsets(0) }
     ) {
@@ -96,7 +97,7 @@ fun ArcadeBottomSheet(
                 .fillMaxWidth()
                 .liquidGlassSurface(
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                    alpha = 0.88f
+                    alpha = 0.94f
                 )
         ) {
             Box(
@@ -166,6 +167,10 @@ fun ArcadeBottomSheet(
             }
 
             if (title != null || subtitle != null) {
+                val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+                val titleColor = if (isDark) Color(0xFFF4F7FB) else Color(0xFF0F172A)
+                val subtitleColor = if (isDark) MaterialTheme.colorScheme.primary else Color(0xFF0284C7)
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -177,7 +182,7 @@ fun ArcadeBottomSheet(
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = titleColor
                         )
                     }
                     if (subtitle != null) {
@@ -185,7 +190,7 @@ fun ArcadeBottomSheet(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            color = subtitleColor
                         )
                     }
                 }

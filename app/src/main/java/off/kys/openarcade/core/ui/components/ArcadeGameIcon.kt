@@ -29,7 +29,9 @@ fun ArcadeGameIcon(
     modifier: Modifier = Modifier,
     primaryColor: Color = MaterialTheme.colorScheme.primary,
     tertiaryColor: Color = MaterialTheme.colorScheme.tertiary,
-    iconSize: Dp = 48.dp
+    iconSize: Dp = 48.dp,
+    showContainerBorder: Boolean = true,
+    showBackgroundBloom: Boolean = true
 ) {
     val context = LocalContext.current
     val imageModel = remember(icon) {
@@ -48,52 +50,50 @@ fun ArcadeGameIcon(
     }
 
     Box(
-        modifier = modifier
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        primaryColor.copy(alpha = 0.25f),
-                        primaryColor.copy(alpha = 0.05f),
-                        Color.Transparent
-                    )
-                )
-            ),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        // Ambient soft color bloom behind icon
-        Box(
-            modifier = Modifier
-                .size(iconSize + 16.dp)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            primaryColor.copy(alpha = 0.35f),
-                            tertiaryColor.copy(alpha = 0.15f),
-                            Color.Transparent
+        if (showBackgroundBloom) {
+            // Ambient soft color bloom behind icon
+            Box(
+                modifier = Modifier
+                    .size(iconSize + 16.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.35f),
+                                tertiaryColor.copy(alpha = 0.15f),
+                                Color.Transparent
+                            )
                         )
                     )
-                )
-        )
+            )
+        }
 
         // One UI 9 / ColorOS 17 Squircle Icon Container
+        val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
         Card(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = cardShape,
+            elevation = CardDefaults.cardElevation(defaultElevation = if (showContainerBorder) 4.dp else 0.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
             ),
             modifier = Modifier
-                .padding(vertical = 12.dp)
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0.60f),
-                            primaryColor.copy(alpha = 0.40f),
-                            Color.Transparent
+                .padding(vertical = if (showContainerBorder) 12.dp else 0.dp)
+                .then(
+                    if (showContainerBorder) {
+                        Modifier.border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.60f),
+                                    primaryColor.copy(alpha = 0.40f),
+                                    Color.Transparent
+                                )
+                            ),
+                            shape = cardShape
                         )
-                    ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                    } else Modifier
                 )
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -106,38 +106,22 @@ fun ArcadeGameIcon(
                     contentScale = ContentScale.Fit
                 )
 
-                // Glass specular shine on icon surface
-                Box(
-                    modifier = Modifier
-                        .size(iconSize)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.18f),
-                                    Color.Transparent
+                if (showContainerBorder) {
+                    // Glass specular shine on icon surface
+                    Box(
+                        modifier = Modifier
+                            .size(iconSize)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.18f),
+                                        Color.Transparent
+                                    )
                                 )
                             )
-                        )
-                )
+                    )
+                }
             }
         }
-
-        // Bottom liquid accent line
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(1.5.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            primaryColor.copy(alpha = 0.80f),
-                            tertiaryColor.copy(alpha = 0.50f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
     }
 }

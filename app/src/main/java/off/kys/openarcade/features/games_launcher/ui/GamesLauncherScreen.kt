@@ -11,9 +11,11 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,6 +94,15 @@ class GamesLauncherScreen : Screen {
             label = "featuredColorAnim"
         )
 
+        val dashboardBlur by animateDpAsState(
+            targetValue = if (showSectionEdit || state.showTagDialog) 24.dp else 0.dp,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            label = "dashboardBlur"
+        )
+
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             viewModel.onEvent(GamesLauncherUiEvent.PermissionCheckRequested)
             viewModel.onEvent(GamesLauncherUiEvent.RefreshStats)
@@ -125,7 +136,13 @@ class GamesLauncherScreen : Screen {
                 AmbientMeshBackground(
                     reduceAnimations = state.reduceAnimations
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(
+                                if (dashboardBlur > 0.dp) Modifier.blur(dashboardBlur) else Modifier
+                            )
+                    ) {
                         LazyVerticalGrid(
                             state = gridState,
                             columns = GridCells.Fixed(state.gridColumns.count),

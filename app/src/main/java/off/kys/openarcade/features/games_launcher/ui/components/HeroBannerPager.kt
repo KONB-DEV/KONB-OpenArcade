@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import off.kys.openarcade.core.ui.theme.BentoTokens
 import off.kys.openarcade.core.ui.theme.rememberDynamicLogo5StopGradient
+import off.kys.openarcade.core.ui.util.squishElasticPress
 import coil.compose.AsyncImage
 import off.kys.openarcade.R
 import off.kys.openarcade.core.domain.model.GameEntry
@@ -166,13 +167,18 @@ fun HeroBannerPager(
                             )
                         )
                     )
+                    // One UI 9 Cloudy Milky Substrate
+                    .background(
+                        if (isDark) Color(0xFFFFFFFF).copy(alpha = 0.04f)
+                        else Color(0xFFFFFFFF).copy(alpha = 0.28f)
+                    )
                     .border(
                         width = 1.dp,
                         brush = Brush.verticalGradient(
                             listOf(
-                                Color.White.copy(alpha = 0.35f),
-                                gameAdaptivePrimary.copy(alpha = 0.25f),
-                                Color.White.copy(alpha = 0.08f)
+                                Color.White.copy(alpha = if (isDark) 0.35f else 0.50f),
+                                gameAdaptivePrimary.copy(alpha = 0.30f),
+                                Color.White.copy(alpha = if (isDark) 0.08f else 0.15f)
                             )
                         ),
                         shape = BentoTokens.HeroShape
@@ -349,6 +355,7 @@ fun HeroBannerPager(
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.12f))
                                     .border(1.dp, Color.White.copy(alpha = 0.35f), CircleShape)
+                                    .squishElasticPress(reduceAnimations = reduceAnimations)
                                     .clickable {
                                         hapticService.cardClick()
                                         onInspectGame(game.packageName)
@@ -367,6 +374,7 @@ fun HeroBannerPager(
                             Box(
                                 modifier = Modifier
                                     .clip(CircleShape)
+                                    .squishElasticPress(reduceAnimations = reduceAnimations)
                                     .background(
                                         Brush.linearGradient(
                                             listOf(

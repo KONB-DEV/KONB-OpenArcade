@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -155,6 +156,90 @@ fun getDirectionalSpecularBorderBrush(
 }
 
 /**
+ * Authentic Samsung One UI 9 Cloudy Glass Material.
+ *
+ * Implements a dynamic cloudy backdrop-filter surface that organically samples and reflects
+ * underlying wallpaper and featured artwork colors:
+ * - Layer 1: Ambient Wallpaper Color Refraction: Soft chromatic bloom sampling wallpaper/artwork tint.
+ * - Layer 2: Cloudy Frosted Substrate: Velvety translucent acrylic with diffuse milky dispersion.
+ * - Layer 3: Samsung One UI 9 Top-Down Specular Highlight: Directional 1dp specular rim.
+ */
+fun Modifier.cloudyGlassSurface(
+    shape: Shape = RoundedCornerShape(26.dp),
+    accentColor: Color? = null,
+    borderWidth: Dp = 1.2.dp,
+    alpha: Float = 0.78f
+): Modifier = composed {
+    val isDark = isSystemInDarkTheme()
+    val featuredTint = LocalFeaturedGameTint.current
+    val defaultAccent = MaterialTheme.colorScheme.primary
+    val effectiveColor = remember(featuredTint, accentColor, defaultAccent) {
+        if (featuredTint.isSpecified && featuredTint != Color.Transparent && featuredTint != Color.Unspecified) {
+            featuredTint
+        } else {
+            accentColor ?: defaultAccent
+        }
+    }
+
+    val topHighlight = Color.White.copy(alpha = if (isDark) 0.24f else 0.40f)
+    val bottomHighlight = Color.White.copy(alpha = if (isDark) 0.08f else 0.14f)
+    val borderBrush = remember(isDark, effectiveColor) {
+        Brush.linearGradient(
+            colorStops = arrayOf(
+                0.0f to topHighlight,
+                0.40f to effectiveColor.copy(alpha = if (isDark) 0.28f else 0.35f),
+                1.0f to bottomHighlight
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+        )
+    }
+
+    // Dynamic Cloudy Backdrop: samples wallpaper/artwork color
+    val cloudyBase = if (isDark) {
+        Color(0xFF101726).copy(alpha = alpha)
+    } else {
+        Color(0xFFF8FAFC).copy(alpha = alpha)
+    }
+
+    val dynamicCloudyTint = remember(cloudyBase, effectiveColor, isDark) {
+        getDynamicGlassSurface(
+            baseSurface = cloudyBase,
+            artworkPrimary = effectiveColor,
+            tintWeight = if (isDark) 0.14f else 0.08f
+        )
+    }
+
+    this
+        .clip(shape)
+        // Layer 1: Ambient Wallpaper Color Refraction (Cloudy Bloom)
+        .background(
+            Brush.radialGradient(
+                colors = listOf(
+                    effectiveColor.copy(alpha = if (isDark) 0.20f else 0.15f),
+                    Color.Transparent
+                ),
+                radius = 600f
+            )
+        )
+        // Layer 2: Velvety Cloudy Acrylic Gradient
+        .background(
+            Brush.verticalGradient(
+                listOf(
+                    dynamicCloudyTint,
+                    dynamicCloudyTint.copy(alpha = (dynamicCloudyTint.alpha * 0.90f).coerceAtLeast(0.45f))
+                )
+            )
+        )
+        // Layer 3: Samsung One UI 9 Milky Substrate
+        .background(
+            if (isDark) Color(0xFFFFFFFF).copy(alpha = 0.04f)
+            else Color(0xFFFFFFFF).copy(alpha = 0.35f)
+        )
+        .border(borderWidth, borderBrush, shape)
+}
+
+/**
  * Large panels: sidebars, nav bars, hero cards, dialogs, bottom sheets.
  * Authentic Samsung One UI 9 frosted glass: velvety matte acrylic surface with
  * directional specular highlight border, 15% chroma boost, and milky substrate.
@@ -167,26 +252,25 @@ fun Modifier.liquidGlassSurface(
 ): Modifier = composed {
     val isDark = isSystemInDarkTheme()
     val accent = accentColor ?: MaterialTheme.colorScheme.primary
-    val baseSurface = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = alpha)
 
     val borderBrush = remember(isDark, accent) {
         getDirectionalSpecularBorderBrush(isDark = isDark, accentColor = accent)
     }
 
+    val topTint = if (isDark) Color(0xFF141D2E).copy(alpha = alpha) else Color(0xFFF6F8FC).copy(alpha = alpha)
+    val bottomTint = if (isDark) Color(0xFF0B101B).copy(alpha = alpha) else Color(0xFFE8EEF6).copy(alpha = alpha)
+
     this
         .clip(shape)
         .background(
             Brush.verticalGradient(
-                listOf(
-                    baseSurface,
-                    baseSurface.copy(alpha = (baseSurface.alpha * 0.90f).coerceAtLeast(0.45f))
-                )
+                listOf(topTint, bottomTint)
             )
         )
         // Layer 3: Samsung One UI 9 Milky Substrate
         .background(
-            if (isDark) Color(0xFF121212).copy(alpha = 0.18f)
-            else Color(0xFFFFFFFF).copy(alpha = 0.12f)
+            if (isDark) Color(0xFF121212).copy(alpha = 0.16f)
+            else Color(0xFFFFFFFF).copy(alpha = 0.10f)
         )
         .border(borderWidth, borderBrush, shape)
 }
